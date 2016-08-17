@@ -8,7 +8,6 @@ BEGIN
 END;
 $total$ LANGUAGE plpgsql;*/
 
-\i /home/webonise/raj/DatabaseAssignment/schema.sql
 
 CREATE OR REPLACE FUNCTION addFromCartToOrder() RETURNS TRIGGER AS $example_table$
 DECLARE
