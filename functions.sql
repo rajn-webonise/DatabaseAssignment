@@ -1,0 +1,35 @@
+CREATE OR REPLACE FUNCTION totalRecords ()
+RETURNS TRIGGER AS $total$
+declare
+	total integer;
+BEGIN
+   SELECT count(*) FROM sellers into total;
+   RETURN total;
+END;
+$total$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION addFromCartToOrder() RETURNS TRIGGER AS $example_table$
+DECLARE
+	total integer;
+	BEGIN
+		SELECT sum(PRICE) INTO total FROM INVENTORY WHERE INVENTORY.ID = new.INVENTORY_ID;
+		UPDATE ORDERS SET ORDER_TOTAL = (ORDER_TOTAL+total) WHERE BUYER_ID = new.BUYER_ID;		
+		INSERT INTO ORDERS(BUYER_ID, ORDER_TOTAL, DISCOUNT_ID, TIMESTAMP, PAYMENT_STATUS ) SELECT new.BUYER_ID, total, null, current_date, 0 WHERE NOT EXISTS (SELECT 1 FROM ORDERS WHERE BUYER_ID=new.BUYER_ID);
+		RETURN NEW;
+	END;
+$example_table$ LANGUAGE plpgsql;
+
+DROP TRIGGER cart_to_order_trigger ON CARTS;
+CREATE TRIGGER cart_to_order_trigger AFTER INSERT ON CARTS FOR EACH ROW EXECUTE PROCEDURE addFromCartToOrder();
+
+CREATE OR REPLACE FUNCTION sale_confirm() RETURNS TRIGGER AS $example_table$
+	BEGIN
+				
+	END;
+$example_table$ LANGUAGE plpgsql;
+
+DROP TRIGGER sale_confirm_trigger ON ORDERS;
+CREATE TRIGGER sale_confirm_trigger AFTER UPDATE OF PAYMENT_STATUS ON ORDERS FOR EACH ROW EXECUTE PROCEDURE sale_confirm();
+
+
